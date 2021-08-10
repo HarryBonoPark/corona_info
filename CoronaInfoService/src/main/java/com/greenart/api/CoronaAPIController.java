@@ -132,9 +132,9 @@ public class CoronaAPIController {
 
             CoronaInfoSidoVO vo = new CoronaInfoSidoVO();
             vo.setCreateDt(Integer.parseInt(getTagValue("createDt", elem)));
-            vo.setDeathCnt(Integer.parseInt(getTagValue("deathCnt", elem)));
+            // vo.setDeathCnt(Integer.parseInt(getTagValue("deathCnt", elem))); 변환하기
             vo.setDefCnt(Integer.parseInt(getTagValue("defCnt", elem)));
-            vo.setGubun(Integer.parseInt(getTagValue("gubun", elem)));
+            // vo.setGubun(Integer.parseInt(getTagValue("gubun", elem))); 변환하기
             vo.setIncDec(Integer.parseInt(getTagValue("incDec", elem)));
             vo.setIsolClearCnt(Integer.parseInt(getTagValue("isolClearCnt", elem)));
             vo.setIsolIngCnt(Integer.parseInt(getTagValue("isolIngCnt", elem)));
