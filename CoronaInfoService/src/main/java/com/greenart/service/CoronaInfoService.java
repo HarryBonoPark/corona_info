@@ -44,6 +44,5 @@ public class CoronaInfoService {
         data.setStrDecideCnt(strDecideCnt);
 
         return data;
-
     }
 }
