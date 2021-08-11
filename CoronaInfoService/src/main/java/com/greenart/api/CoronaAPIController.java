@@ -4,13 +4,14 @@ import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import com.greenart.service.CoronaInfoService;
-import com.greenart.vo.CoronaInfoSidoVO;
+import com.greenart.vo.CoronaSidoInfoVO;
 import com.greenart.vo.CoronaInfoVO;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,80 +105,82 @@ public class CoronaAPIController {
         return node.getNodeValue();
     }
     @GetMapping("/api/corona/sido")
-    public Map<String, Object> getCoronaSidoInfo() throws Exception {
+    public Map<String, Object> getCoronaSido(
+        @RequestParam String startDt, @RequestParam String endDt
+    ) throws Exception {
         Map<String, Object> resultMap = new LinkedHashMap<String, Object>();
+
+        // 1. 데이터를 가져올 URL을 만드는 과정
         StringBuilder urlBuilder = new StringBuilder("http://openapi.data.go.kr/openapi/service/rest/Covid19/getCovid19SidoInfStateJson"); /*URL*/
         urlBuilder.append("?" + URLEncoder.encode("serviceKey","UTF-8") + "=3CID6KRU4kjF4jvHanoFBLwycg6Htt86aVfgEOgBmAecshZIcO5EC9UM9FhVGwAX2Zf%2B%2FrxgsJeUfled1zNS0w%3D%3D"); /*Service Key*/
         urlBuilder.append("&" + URLEncoder.encode("pageNo","UTF-8") + "=" + URLEncoder.encode("1", "UTF-8")); /*페이지번호*/
-        urlBuilder.append("&" + URLEncoder.encode("numOfRows","UTF-8") + "=" + URLEncoder.encode("10", "UTF-8")); /*한 페이지 결과 수*/
-        urlBuilder.append("&" + URLEncoder.encode("startCreateDt","UTF-8") + "=" + URLEncoder.encode("20210809", "UTF-8")); /*검색할 생성일 범위의 시작*/
-        urlBuilder.append("&" + URLEncoder.encode("endCreateDt","UTF-8") + "=" + URLEncoder.encode("20210810", "UTF-8")); /*검색할 생성일 범위의 종료*/
+        urlBuilder.append("&" + URLEncoder.encode("numOfRows","UTF-8") + "=" + URLEncoder.encode("100000", "UTF-8")); /*한 페이지 결과 수*/
+        urlBuilder.append("&" + URLEncoder.encode("startCreateDt","UTF-8") + "=" + URLEncoder.encode(startDt, "UTF-8")); /*검색할 생성일 범위의 시작*/
+        urlBuilder.append("&" + URLEncoder.encode("endCreateDt","UTF-8") + "=" + URLEncoder.encode(endDt, "UTF-8")); /*검색할 생성일 범위의 종료*/
 
-        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-        Document doc = docBuilder.parse(urlBuilder.toString());
+        // 2. 데이터 요청 (Request)
+        // java.xml.parser
+        DocumentBuilderFactory dFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder = dFactory.newDocumentBuilder();
+        // org.w3c.dom
+        Document doc = dBuilder.parse(urlBuilder.toString());
 
+        // 3. XML 파싱 시작
+        // text -> Node 변환
         doc.getDocumentElement().normalize();
-        NodeList mList = doc.getElementsByTagName("item");
-        if(mList.getLength() <= 0) {
-            resultMap.put("status", false);
-            resultMap.put("message", "데이터가 없습니다.");
-            return resultMap;
-        }
-        System.out.println("size : "+mList.getLength());
+        System.out.println(doc.getDocumentElement().getNodeName());
 
-        for(int i=0; i<mList.getLength(); i++) {
-            Node node = mList.item(i);
-            Element elem = (Element) node;
+        NodeList nList = doc.getElementsByTagName("item");
+        System.out.println("데이터 수 : "+nList.getLength());
 
-            CoronaInfoSidoVO vo = new CoronaInfoSidoVO();
-            vo.setCreateDt(Integer.parseInt(getTagValue("createDt", elem)));
-            // vo.setDeathCnt(Integer.parseInt(getTagValue("deathCnt", elem))); 변환하기
-            vo.setDefCnt(Integer.parseInt(getTagValue("defCnt", elem)));
-            // vo.setGubun(Integer.parseInt(getTagValue("gubun", elem))); 변환하기
-            vo.setIncDec(Integer.parseInt(getTagValue("incDec", elem)));
-            vo.setIsolClearCnt(Integer.parseInt(getTagValue("isolClearCnt", elem)));
-            vo.setIsolIngCnt(Integer.parseInt(getTagValue("isolIngCnt", elem)));
-            vo.setLocalOccCnt(Integer.parseInt(getTagValue("localOccCnt", elem)));
-            vo.setOverFlowCnt(Integer.parseInt(getTagValue("overFlowCnt", elem)));
+        for(int i=0; i<nList.getLength(); i++) {
+            Node n = nList.item(i);
+            Element elem = (Element)n;
 
-            // <createDt>2021-08-10 09:38:37.28</createDt>
-            // <deathCnt>12</deathCnt>
-            // <defCnt>5470</defCnt>
-            // <gubun>검역</gubun>
-            // <gubunCn>隔離區</gubunCn>
-            // <gubunEn>Lazaretto</gubunEn>
-            // <incDec>13</incDec>
-            // <isolClearCnt>4885</isolClearCnt>
-            // <isolIngCnt>573</isolIngCnt>
-            // <localOccCnt>0</localOccCnt>
-            // <overFlowCnt>13</overFlowCnt>
-            // <qurRate>-</qurRate>
-            // <seq>11447</seq>
-            // <stdDay>2021년 08월 10일 00시</stdDay>
-            // <updateDt>null</updateDt>
-
-            System.out.println(getTagValue("createDt", elem));      // 등록일
-            System.out.println(getTagValue("deathCnt", elem));      // 사망자 수
-            System.out.println(getTagValue("defCnt", elem));        // 확진자 수
-            System.out.println(getTagValue("gubun", elem));         // 시도명
-            System.out.println(getTagValue("incDec", elem));        // 증가 수
-            System.out.println(getTagValue("isolClearCnt", elem));  // 격리 해제 (누적)
-            System.out.println(getTagValue("isolIngCnt", elem));    // 격리 중
-            System.out.println(getTagValue("localOccCnt", elem));   // 지역발생 수
-            System.out.println(getTagValue("overFlowCnt", elem));   // 해외유입 수
-            System.out.println("=====================================================");
+            String createDt = getTagValue("createDt", elem);
+            String deathCnt = getTagValue("deathCnt", elem);
+            String defCnt = getTagValue("defCnt", elem);
+            String gubun = getTagValue("gubun", elem);
+            String incDec = getTagValue("incDec", elem);
+            String isolClearCnt = getTagValue("isolClearCnt", elem);
+            String isolIngCnt = getTagValue("isolIngCnt", elem);
+            String localOccCnt = getTagValue("localOccCnt", elem);
+            String overFlowCnt = getTagValue("overFlowCnt", elem);
             
-            Date dt = new Date();
-            SimpleDateFormat dtFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            dt = dtFormat.parse(getTagValue("createDt", elem));
+            CoronaSidoInfoVO vo = new CoronaSidoInfoVO();
+            // 문자열로 표현된 날짜를 java.util.Date 클래스 타입으로변환
+            Date cDt = new Date(); // null로 채워도 상관없음
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            cDt = formatter.parse(createDt); // 문자열로부터 날짜를 유추한다.
 
-            vo.setStateTime(dt);
+            vo.setCreateDt(cDt);
+            vo.setDeathCnt(Integer.parseInt(deathCnt)); // 문자열 타입의 데이터를 정수형으로 변환해서 저장
+            vo.setDefCnt(Integer.parseInt(defCnt));
+            vo.setGubun(gubun);
+            vo.setIncDec(Integer.parseInt(incDec));
+            vo.setIsolClearCnt(Integer.parseInt(isolClearCnt));
+            vo.setIsolIngCnt(Integer.parseInt(isolIngCnt));
+            vo.setLocalOccCnt(Integer.parseInt(localOccCnt));
+            vo.setOverFlowCnt(Integer.parseInt(overFlowCnt));
 
-            service.insertCoronaInfo(vo);
+            service.insertCoronaSidoInfo(vo);
         }
-        resultMap.put("status", true);
-        resultMap.put("message", "데이터가 입력되었습니다.");
+        return resultMap;
+    }
+
+    @GetMapping("/api/coronaSidoInfo/{date}")
+    public Map<String, Object> getCoronaSidoInfo(@PathVariable String date) {
+        Map<String, Object> resultMap = new LinkedHashMap<String, Object>();
+        if(date.equals("today")) {
+            List<CoronaSidoInfoVO> list = service.selectTodayCoronaSidoInfo();
+            resultMap.put("status", true);
+            resultMap.put("data", list);
+        }
+        else {
+            List<CoronaSidoInfoVO> list = service.selectCoronaSidoInfo(date);
+            resultMap.put("status", true);
+            resultMap.put("data", list);
+        }
         return resultMap;
     }
 }

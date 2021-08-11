@@ -1,6 +1,9 @@
 package com.greenart.mapper;
 
-import com.greenart.vo.CoronaInfoSidoVO;
+import com.greenart.vo.CoronaSidoInfoVO;
+
+import java.util.List;
+
 import com.greenart.vo.CoronaInfoVO;
 
 import org.apache.ibatis.annotations.Mapper;
@@ -10,5 +13,6 @@ public interface CoronaInfoMapper {
     public void insertCoronaInfo(CoronaInfoVO vo);
     public CoronaInfoVO selectCoronaInfoByDate(String date);
 
-    public void insertCoronaInfoSido(CoronaInfoSidoVO vo);
+    public void insertCoronaSidoInfo(CoronaSidoInfoVO vo);
+    public List<CoronaSidoInfoVO> selectCoronaSidoInfo(String date);
 }
