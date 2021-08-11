@@ -38,7 +38,7 @@
                 <div class="content_left">
                     <p class="con_title">검사자 수</p>
                     <p class="con_number" id="accExamCnt">0</p>
-                    <p class="con_title">확인자 수</p>
+                    <p class="con_title">확진자 수</p>
                     <p class="con_number"id="decideCnt">0</p>
                 </div>
                 <div class="content_right">
@@ -106,6 +106,13 @@
                         <span class="current">1</span> / <span class="total">6</span>
                         <button id="region_next">&gt;</button>
                     </div>
+                </div>
+            </div>
+            <div class="dashboard_content">
+                <div class="content_left">
+                </div>
+                <div class="content_right">
+                    <canvas id="age_status" style="width: 100%; height: 100%;"></canvas>
                 </div>
             </div>
         </div>

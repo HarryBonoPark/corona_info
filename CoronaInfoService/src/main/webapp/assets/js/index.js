@@ -87,7 +87,7 @@ $.ajax({
                 data:{
                     labels:sidoName,
                     datasets:[{
-                        label:"2021-08-09 신규확진",
+                        label:"2021-08-11 신규확진",
                         data:defCnt,
                         backgroundColor:['#FF9900']
                     }]
@@ -95,7 +95,6 @@ $.ajax({
             })
         }
     })
-
 
     // let ctx2 = $("#confirmed_chart");
     // let confirmed_chart = new Chart(ctx2, {
@@ -134,6 +133,37 @@ $.ajax({
                 backgroundColor:['rgb(30, 30, 255, 0.7)']
             }
         ]
+        }
+    })
+
+    $.ajax({
+        type:"get",
+        url:"api/coronaAgeInfo/today",
+        success:function(r) {
+            console.log(r);
+            let age_group = new Array();
+            let confCase = new Array();
+            for(let i=0; i<r.data.length; i++) {
+                let age = r.data[i].gubun;
+                let cnt = r.data[i].confCase;
+                age_group.push(age);
+                confCase.push(cnt);
+            }
+            let ctx4 = $("#age_status");
+            let regionalChart = new Chart(ctx4, {
+                type:'bar',
+                options:{
+                    responsive:false
+                },
+                data:{
+                    labels:age_group,
+                    datasets:[{
+                        label:"2021-08-11 연령대별 확진자 수",
+                        data:confCase,
+                        backgroundColor:['#FFB2D9']
+                    }]
+                }
+            })
         }
     })
 })

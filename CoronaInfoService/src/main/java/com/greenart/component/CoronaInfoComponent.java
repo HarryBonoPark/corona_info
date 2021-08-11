@@ -8,6 +8,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import com.greenart.service.CoronaInfoService;
+import com.greenart.vo.CoronaAgeInfoVO;
 import com.greenart.vo.CoronaInfoVO;
 import com.greenart.vo.CoronaSidoInfoVO;
 
@@ -138,6 +139,60 @@ public class CoronaInfoComponent {
             vo.setOverFlowCnt(Integer.parseInt(overFlowCnt));
 
             service.insertCoronaSidoInfo(vo);
+        }
+    }
+    @Scheduled(cron="20 30 10 * * *")
+    public void getCoronaAgeInfo() throws Exception {
+        Date dt = new Date(); // 현재 시간
+        SimpleDateFormat dtFormatter = new SimpleDateFormat("YYYYMMdd");
+        String today = dtFormatter.format(dt);
+
+        StringBuilder urlBuilder = new StringBuilder("http://openapi.data.go.kr/openapi/service/rest/Covid19/getCovid19GenAgeCaseInfJson"); /*URL*/
+        urlBuilder.append("?" + URLEncoder.encode("serviceKey","UTF-8") + "=3CID6KRU4kjF4jvHanoFBLwycg6Htt86aVfgEOgBmAecshZIcO5EC9UM9FhVGwAX2Zf%2B%2FrxgsJeUfled1zNS0w%3D%3D"); /*Service Key*/
+        urlBuilder.append("&" + URLEncoder.encode("pageNo","UTF-8") + "=" + URLEncoder.encode("1", "UTF-8")); /*페이지번호*/
+        urlBuilder.append("&" + URLEncoder.encode("numOfRows","UTF-8") + "=" + URLEncoder.encode("10", "UTF-8")); /*한 페이지 결과 수*/
+        urlBuilder.append("&" + URLEncoder.encode("startCreateDt","UTF-8") + "=" + URLEncoder.encode(today, "UTF-8")); /*검색할 생성일 범위의 시작*/
+        urlBuilder.append("&" + URLEncoder.encode("endCreateDt","UTF-8") + "=" + URLEncoder.encode(today, "UTF-8")); /*검색할 생성일 범위의 종료*/
+
+        DocumentBuilderFactory dFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder = dFactory.newDocumentBuilder();
+        Document doc = dBuilder.parse(urlBuilder.toString());
+
+        doc.getDocumentElement().normalize();
+
+        NodeList nList = doc.getElementsByTagName("item");
+        System.out.println("데이터 수 : "+nList.getLength());
+
+        for(int i=0; i<nList.getLength(); i++) {
+            Node n = nList.item(i);
+            Element elem = (Element)n;
+
+            String confCase = getTagValue("confCase", elem);
+            String createDt = getTagValue("createDt", elem);
+            String death = getTagValue("death", elem);
+            String gubun = getTagValue("gubun", elem);
+            if(gubun.equals("남성") || gubun.equals("여성")) continue;
+            if(gubun.equals("0-9")) gubun = "0";
+            else if(gubun.equals("10-19")) gubun = "10";
+            else if(gubun.equals("20-29")) gubun = "20";
+            else if(gubun.equals("30-39")) gubun = "30";
+            else if(gubun.equals("40-49")) gubun = "40";
+            else if(gubun.equals("50-59")) gubun = "50";
+            else if(gubun.equals("60-69")) gubun = "60";
+            else if(gubun.equals("70-79")) gubun = "70";
+            else gubun = "80";
+
+            CoronaAgeInfoVO vo = new CoronaAgeInfoVO();
+            Date cDt = new Date();
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            cDt = formatter.parse(createDt);
+
+            vo.setConfCase(Integer.parseInt(confCase));
+            vo.setCreateDt(cDt);
+            vo.setDeath(Integer.parseInt(death));
+            vo.setGubun(gubun);
+
+            service.insertCoronaAge(vo);
         }
     }
 }

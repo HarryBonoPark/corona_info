@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.greenart.mapper.CoronaInfoMapper;
+import com.greenart.vo.CoronaAgeInfoVO;
 import com.greenart.vo.CoronaInfoVO;
 import com.greenart.vo.CoronaSidoInfoVO;
 
@@ -72,5 +73,28 @@ public class CoronaInfoService {
     }
     public List<CoronaSidoInfoVO> selectCoronaSidoInfo(String date) {
         return mapper.selectCoronaSidoInfo(date);
+    }
+    public void insertCoronaAge(CoronaAgeInfoVO vo) {
+        mapper.insertCoronaAge(vo);
+    }
+    public List<CoronaAgeInfoVO> selectCoronaAgeInfo(){
+        Calendar now = Calendar.getInstance();
+        Calendar standard = Calendar.getInstance();
+        standard.set(Calendar.HOUR_OF_DAY, 10);
+        standard.set(Calendar.MINUTE, 30);
+        standard.set(Calendar.SECOND, 10);
+
+        if(now.getTimeInMillis() < standard.getTimeInMillis()) {
+            // 현재 접속시간이 기준시간 (10시 30분 20초) 보다 이전일 때
+            // 전 날 정보를 가져온다.
+            now.add(Calendar.DATE, -1);
+        }
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        String dt = formatter.format(now.getTime());
+
+        return mapper.selectCoronaAgeInfo(dt);
+    }
+    public List<CoronaAgeInfoVO> selectCoronaAgeInfo(String date) {
+        return mapper.selectCoronaAgeInfo(date);
     }
 }
