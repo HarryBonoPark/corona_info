@@ -1,9 +1,13 @@
 package com.greenart.component;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -11,7 +15,10 @@ import com.greenart.service.CoronaInfoService;
 import com.greenart.vo.CoronaAgeInfoVO;
 import com.greenart.vo.CoronaInfoVO;
 import com.greenart.vo.CoronaSidoInfoVO;
+import com.greenart.vo.CoronaVaccineInfoVO;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -72,6 +79,7 @@ public class CoronaInfoComponent {
             service.insertCoronaInfo(vo);
         }
     }
+    
     public static String getTagValue(String tag, Element elem) {
         NodeList nlList = elem.getElementsByTagName(tag).item(0).getChildNodes();
         if(nlList == null) return null;
@@ -141,7 +149,9 @@ public class CoronaInfoComponent {
             service.insertCoronaSidoInfo(vo);
         }
     }
-    @Scheduled(cron="20 30 10 * * *")
+    
+    // 매일 14:50:00 에 한 번 실행
+    @Scheduled(cron="0 50 14 * * *")
     public void getCoronaAgeInfo() throws Exception {
         Date dt = new Date(); // 현재 시간
         SimpleDateFormat dtFormatter = new SimpleDateFormat("YYYYMMdd");
@@ -159,19 +169,24 @@ public class CoronaInfoComponent {
         Document doc = dBuilder.parse(urlBuilder.toString());
 
         doc.getDocumentElement().normalize();
+        // System.out.println(doc.getDocumentElement().getNodeName()); // --> response라고 나와야함
 
         NodeList nList = doc.getElementsByTagName("item");
-        System.out.println("데이터 수 : "+nList.getLength());
+        System.out.println("데이터 수 : "+nList.getLength()); // 데이터 갯수 확인하기
 
         for(int i=0; i<nList.getLength(); i++) {
-            Node n = nList.item(i);
-            Element elem = (Element)n;
+            // Node n = nList.item(i);
+            // Element elem = (Element)n;
+            Element elem = (Element)nList.item(i); // 위에 두 줄을 한 줄로 적기
 
             String confCase = getTagValue("confCase", elem);
+            String confCaseRate = getTagValue("confCaseRate", elem);
             String createDt = getTagValue("createDt", elem);
+            String criticalRate = getTagValue("criticalRate", elem);
             String death = getTagValue("death", elem);
+            String deathRate = getTagValue("deathRate", elem);
             String gubun = getTagValue("gubun", elem);
-            if(gubun.equals("남성") || gubun.equals("여성")) continue;
+            
             if(gubun.equals("0-9")) gubun = "0";
             else if(gubun.equals("10-19")) gubun = "10";
             else if(gubun.equals("20-29")) gubun = "20";
@@ -180,19 +195,86 @@ public class CoronaInfoComponent {
             else if(gubun.equals("50-59")) gubun = "50";
             else if(gubun.equals("60-69")) gubun = "60";
             else if(gubun.equals("70-79")) gubun = "70";
-            else gubun = "80";
+            else if(gubun.equals("80 이상")) gubun = "80";
+            // 남성, 여성은 변환없이 그대로 쓰겠다 !
+            
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Date date = formatter.parse(createDt);
 
             CoronaAgeInfoVO vo = new CoronaAgeInfoVO();
-            Date cDt = new Date();
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            cDt = formatter.parse(createDt);
-
             vo.setConfCase(Integer.parseInt(confCase));
-            vo.setCreateDt(cDt);
+            vo.setConfCaseRate(Double.parseDouble(confCaseRate));
+            vo.setCreateDt(date);
+            vo.setCriticalRate(Double.parseDouble(criticalRate));
             vo.setDeath(Integer.parseInt(death));
+            vo.setDeathRate(Double.parseDouble(deathRate));
             vo.setGubun(gubun);
 
             service.insertCoronaAge(vo);
+        }
+    }
+
+    @Scheduled(cron="0 0 10 * * *")
+    public void getCoronaVaccineInfo() throws Exception {
+        Date date = new Date();
+        SimpleDateFormat dtFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        String today = dtFormatter.format(date)+" 00:00:00";
+
+        StringBuilder urlBuilder = new StringBuilder("https://api.odcloud.kr/api/15077756/v1/vaccine-stat"); /*URL*/
+        urlBuilder.append("?" + URLEncoder.encode("serviceKey","UTF-8") + "=3CID6KRU4kjF4jvHanoFBLwycg6Htt86aVfgEOgBmAecshZIcO5EC9UM9FhVGwAX2Zf%2B%2FrxgsJeUfled1zNS0w%3D%3D"); /*Service Key*/
+        urlBuilder.append("&" + URLEncoder.encode("page","UTF-8") + "=" + URLEncoder.encode("1", "UTF-8")); /*페이지번호*/
+        urlBuilder.append("&" + URLEncoder.encode("perPage","UTF-8") + "=" + URLEncoder.encode("100000", "UTF-8")); /*한 페이지 결과 수*/
+        urlBuilder.append("&" + URLEncoder.encode("cond[baseDate::EQ]","UTF-8") + "=" + URLEncoder.encode(today, "UTF-8")); /*검색할 생성일 범위의 시작*/
+        
+        System.out.println(urlBuilder.toString());
+
+        URL url = new URL(urlBuilder.toString());
+        HttpsURLConnection conn = (HttpsURLConnection)url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("Content-type", "application/json");
+
+        BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        StringBuilder sb = new StringBuilder();
+
+        String line;
+        while((line = rd.readLine()) != null) {
+            sb.append(line);
+        }
+        rd.close();
+        conn.disconnect();
+
+        System.out.println(sb.toString());
+
+        JSONObject jsonObject = new JSONObject(sb.toString());
+        // JSONObject cntObj = jsonObject.getJSONObject("count");
+        Integer cnt = jsonObject.getInt("currentCount");
+        System.out.println("Count : "+cnt);
+
+        JSONArray dataArray = jsonObject.getJSONArray("data");
+        for(int i=0; i<dataArray.length(); i++) {
+            JSONObject obj = dataArray.getJSONObject(i);
+            Integer accumulatedFirstCnt = obj.getInt("accumulatedFirstCnt");
+            Integer accumulatedSecondCnt = obj.getInt("accumulatedSecondCnt");
+            String baseDate = obj.getString("baseDate");
+            Integer firstCnt = obj.getInt("firstCnt");
+            Integer secondCnt = obj.getInt("secondCnt");
+            String sido = obj.getString("sido");
+            Integer totalFirstCnt = obj.getInt("totalFirstCnt");
+            Integer totalSecondCnt = obj.getInt("totalSecondCnt");
+
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Date dt = formatter.parse(baseDate);
+
+            CoronaVaccineInfoVO vo = new CoronaVaccineInfoVO();
+            vo.setAccFirstCnt(accumulatedFirstCnt);
+            vo.setAccSecondCnt(accumulatedSecondCnt);
+            vo.setRegDt(dt);
+            vo.setFirstCnt(firstCnt);
+            vo.setSecondCnt(secondCnt);
+            vo.setSido(sido);
+
+            service.insertCoronaVaccineInfo(vo);
+            
         }
     }
 }

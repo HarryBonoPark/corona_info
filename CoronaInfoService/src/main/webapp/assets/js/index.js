@@ -1,31 +1,92 @@
 $(function(){
+    $.ajax({
+        type:"get",
+        url:"/api/corona/age/today",
+        success:function(r) {
+            console.log("연령대 별 코로나 현황")
+            console.log(r);
 
-$.ajax({
-    type:"get",
-    url:"/api/coronaInfo/today",
-    success:function(r) {
-        console.log(r);
-        $("#accExamCnt").html(r.data.strAccExamCnt);
-        $("#decideCnt").html(r.data.strDecideCnt);
-        let ctx2 = $("#confirmed_chart");
-        let confirmed_chart = new Chart(ctx2, {
-            type:"pie",
-            options:{
-                responsive:false
-            },
-            data:{
-                labels:["확진", "음성"],
-                datasets:[
-                    {
-                        label:"확진/음성",
-                        data:[r.data.decideCnt, r.data.examCnt-r.data.decideCnt],
-                        backgroundColor:["#87CE00", "#FFE400"]
-                    }
-                ]
+            let confArr = new Array();
+            let confLabel = new Array();
+            for(let i=0; i<r.data.length; i++) {
+                confArr.push(r.data[i].confCase);
+                confLabel.push(r.data[i].gubun+"대");
             }
-        })
-    }
-})
+            let ageChart = new Chart($("#age_chart"), {
+                type:"bar",
+                options:{
+                    responsive:false,
+                },
+                data:{
+                    labels:confLabel,
+                    datasets:[
+                        {
+                            label:r.dt+"연령대 별 확진",
+                            data:confArr,
+                            backgroundColor:["rgba(255, 0, 0, 0.4)"]
+                        }
+                    ]
+                }
+            })
+        }
+    })
+
+    $.ajax({
+        type:"get",
+        url:"/api/corona/gen/today",
+        success:function(r) {
+            console.log(r);
+            let confArr = new Array();
+            let confLabel = new Array();
+            for(let i=0; i<r.data.length; i++) {
+                confArr.push(r.data[i].confCase);
+                confLabel.push(r.data[i].gubun);
+            }
+            let genChart = new Chart($("#gen_chart"), {
+                type:"pie",
+                options:{
+                    responsive:false,
+                },
+                data:{
+                    labels:confLabel,
+                    datasets:[
+                        {
+                            label:r.dt+"성별 확진 비율",
+                            data:confArr,
+                            backgroundColor:["rgba(255, 0, 0, 0.4)", "rgba(0,0,255,0.4)"]
+                        }
+                    ]
+                }
+            })
+        }
+    })
+
+    $.ajax({
+        type:"get",
+        url:"/api/coronaInfo/today",
+        success:function(r) {
+            console.log(r);
+            $("#accExamCnt").html(r.data.strAccExamCnt);
+            $("#decideCnt").html(r.data.strDecideCnt);
+            let ctx2 = $("#confirmed_chart");
+            let confirmed_chart = new Chart(ctx2, {
+                type:"pie",
+                options:{
+                    responsive:false
+                },
+                data:{
+                    labels:["확진", "음성"],
+                    datasets:[
+                        {
+                            label:"확진/음성",
+                            data:[r.data.decideCnt, r.data.examCnt-r.data.decideCnt],
+                            backgroundColor:["#87CE00", "#FFE400"]
+                        }
+                    ]
+                }
+            })
+        }
+    })
 
     $.ajax({
         type:"get",
@@ -133,37 +194,6 @@ $.ajax({
                 backgroundColor:['rgb(30, 30, 255, 0.7)']
             }
         ]
-        }
-    })
-
-    $.ajax({
-        type:"get",
-        url:"api/coronaAgeInfo/today",
-        success:function(r) {
-            console.log(r);
-            let age_group = new Array();
-            let confCase = new Array();
-            for(let i=0; i<r.data.length; i++) {
-                let age = r.data[i].gubun;
-                let cnt = r.data[i].confCase;
-                age_group.push(age);
-                confCase.push(cnt);
-            }
-            let ctx4 = $("#age_status");
-            let regionalChart = new Chart(ctx4, {
-                type:'bar',
-                options:{
-                    responsive:false
-                },
-                data:{
-                    labels:age_group,
-                    datasets:[{
-                        label:"2021-08-11 연령대별 확진자 수",
-                        data:confCase,
-                        backgroundColor:['#FFB2D9']
-                    }]
-                }
-            })
         }
     })
 })

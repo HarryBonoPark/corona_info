@@ -110,9 +110,10 @@
             </div>
             <div class="dashboard_content">
                 <div class="content_left">
+                    <canvas id="gen_chart" style="width: 100%; height: 100%;"></canvas>
                 </div>
                 <div class="content_right">
-                    <canvas id="age_status" style="width: 100%; height: 100%;"></canvas>
+                    <canvas id="age_chart" style="width: 100%; height: 100%;"></canvas>
                 </div>
             </div>
         </div>
