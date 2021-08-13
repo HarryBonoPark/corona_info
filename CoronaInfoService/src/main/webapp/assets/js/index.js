@@ -21,7 +21,7 @@ $(function(){
                     labels:confLabel,
                     datasets:[
                         {
-                            label:r.dt+"연령대 별 확진",
+                            label:r.dt+" 연령대 별 확진",
                             data:confArr,
                             backgroundColor:["rgba(255, 0, 0, 0.4)"]
                         }
@@ -148,7 +148,7 @@ $(function(){
                 data:{
                     labels:sidoName,
                     datasets:[{
-                        label:"2021-08-11 신규확진",
+                        label:r.dt+" 신규확진",
                         data:defCnt,
                         backgroundColor:['#FF9900']
                     }]
@@ -157,43 +157,41 @@ $(function(){
         }
     })
 
-    // let ctx2 = $("#confirmed_chart");
-    // let confirmed_chart = new Chart(ctx2, {
-    //     type:"pie",
-    //     options:{
-    //         responsive:false
-    //     },
-    //     data:{
-    //         labels:["확진", "음성"],
-    //         datasets:[
-    //             {
-    //                 label:"확진/음성",
-    //                 data:[100, 200],
-    //                 backgroundColor:["#33CC33", "#FFFF33"]
-    //             }
-    //         ]
-    //     }
-    // })
-    let ctx3 = $("#vaccine_chart");
-    let vaccineChart = new Chart(ctx3, {
-        type:'bar',
-        options:{
-            responsive:false
-        },
-        data:{
-            labels:['서울', '경기', '대구', '인천', '부산', '경남', '경북', '충남', '강원', '대전', '충북',
-            '광주', '울산', '전북', '전남', '제주', '세종'],
-            datasets:[{
-                label:"2021-08-09 1차 접종현황",
-                data:[415, 408, 86, 65, 123, 88, 30, 68, 24, 42, 39, 19, 25, 21, 14, 11, 1],
-                backgroundColor:['#99CCFF']
-            },
-            {
-                label:"2021-08-09 2차 접종현황",
-                data:[415, 408, 86, 65, 123, 88, 30, 68, 24, 42, 39, 19, 25, 21, 14, 11, 1],
-                backgroundColor:['rgb(30, 30, 255, 0.7)']
+    $.ajax({
+        type:"get",
+        url:"api/corona/vaccine/today",
+        success:function(r) {
+            console.log("접종 현황")
+            console.log(r);
+
+            let regionArr = new Array();
+            let firstArr = new Array();
+            let secondArr = new Array();
+            
+            for(let i=0; i<r.data.length; i++) {
+                regionArr.push(r.data[i].region);
+                firstArr.push(r.data[i].firstCnt);
+                secondArr.push(r.data[i].secondCnt);
             }
-        ]
+            let vaccineChart = new Chart($("#vaccine_chart"), {
+                type:'bar',
+                options:{
+                    responsive:false
+                },
+                data:{
+                    labels:regionArr,
+                    datasets:[{
+                        label:"1차 접종현황",
+                        data:firstArr,
+                        backgroundColor:['#99CCFF']
+                    },
+                    {
+                        label:"2차 접종현황",
+                        data:secondArr,
+                        backgroundColor:['rgb(30, 30, 255, 0.7)']
+                    }]
+                }  
+            })
         }
     })
 })

@@ -324,8 +324,8 @@ public class CoronaAPIController {
             Integer firstCnt = obj.getInt("firstCnt");
             Integer secondCnt = obj.getInt("secondCnt");
             String sido = obj.getString("sido");
-            Integer totalFirstCnt = obj.getInt("totalFirstCnt");
-            Integer totalSecondCnt = obj.getInt("totalSecondCnt");
+            // Integer totalFirstCnt = obj.getInt("totalFirstCnt");
+            // Integer totalSecondCnt = obj.getInt("totalSecondCnt");
 
             SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             Date dt = formatter.parse(baseDate);
