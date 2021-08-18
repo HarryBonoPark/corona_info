@@ -1,8 +1,13 @@
 package com.greenart.service;
 
+import java.util.List;
+
 import com.greenart.mapper.RegionalInfoMapper;
 import com.greenart.vo.CoronaInfoVO;
 import com.greenart.vo.CoronaSidoInfoVO;
+import com.greenart.vo.CoronaVaccineInfoVO;
+import com.greenart.vo.CoronaWeeksVO;
+import com.greenart.vo.VaccineWeeksVO;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,5 +21,20 @@ public class RegionalInfoService {
     }
     public CoronaInfoVO selectCoronaInfoRegionTotal(String date) {
         return mapper.selectCoronaInfoRegionTotal(date);
+    }
+    public CoronaVaccineInfoVO selectCoronaVaccineInfo(String region, String date) {
+        return mapper.selectCoronaVaccineInfo(region, date);
+    }
+    public String selectDangerAge(String date) {
+        return mapper.selectDangerAge(date);
+    }
+    public List<CoronaWeeksVO> selectRegionalCoronaTwoWeeks(String region, String date) {
+        return mapper.selectRegionalCoronaTwoWeeks(region, date);
+    }
+    public List<VaccineWeeksVO> selectRegionalVaccineTwoWeeks(String region, String date) {
+        return mapper.selectRegionalVaccineTwoWeeks(region, date);
+    }
+    public List<VaccineWeeksVO> selectVaccineInfo( String date) {
+        return mapper.selectVaccineInfo(date);
     }
 }
